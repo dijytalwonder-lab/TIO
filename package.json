@@ -1,0 +1,22 @@
+{
+  "name": "happy-breaking",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TAKE IT OUT (was Happy Breaking) - low-poly isometric diorama smashing game (Three.js)",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "lint": "eslint src",
+    "sim": "node tests/sim.mjs",
+    "web": "vite build --config vite.standalone.config.js && node scripts/inline-web.mjs"
+  },
+  "dependencies": {
+    "@fontsource/fredoka": "^5.1.0",
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.14.0",
+    "globals": "^15.12.0",
+    "vite": "^5.4.10"
+  }
+}
