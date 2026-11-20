@@ -19,6 +19,22 @@ npm run web       # single-file build -> dist-web/play.html (works from file://)
 npx eslint src    # lint
 ```
 
+## Android app
+
+The game is wrapped as an Android app with Capacitor 6 (app id `com.dijytal.takeitout`, portrait only, fullscreen, minSdk 23, targets Android 16 / API 36). The Android back button steps back through the menus and closes the app from the main menu.
+
+```
+npm run build                     # web assets -> dist/
+npx cap sync android              # copy them into the Android project
+cd android
+./gradlew.bat clean assembleDebug --no-daemon
+# -> android/app/build/outputs/apk/debug/app-debug.apk   (needs JDK 17 + Android SDK, see local.properties)
+```
+
+The icon and splash screens are drawn by `node scripts/make-android-art.mjs`. A Play Store release needs a signing key and `assembleRelease` / `bundleRelease`.
+
+Phone-style test (Pixel and small screens, finger touches only, tab hide/show, rotation, cold reload, memory): `node tests/headless/android-full.mjs pixel7` and `... small`.
+
 ## Writing the story
 
 Everything lives in `src/story.js`: the cast, the chapters, the dialogue and the levels. Rooms and their furniture are in `src/rooms.js` (`SETS`), room colours in `src/levels.js` (`ROOMS`), and the drawn characters and backdrops in `src/portraits.js`.

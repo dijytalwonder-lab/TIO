@@ -1,0 +1,12 @@
+{
+  "appId": "com.dijytal.takeitout",
+  "appName": "Take It Out",
+  "webDir": "dist",
+  "backgroundColor": "#bfeaff",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

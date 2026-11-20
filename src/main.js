@@ -9,6 +9,7 @@ import { assemble } from './objects.js';
 import { World } from './world.js';
 import { Breakable } from './breakable.js';
 import { makeDiorama, pieceInfo, hasSet } from './rooms.js';
+import { initNative } from './native.js';
 import { Effects } from './effects.js';
 import { Hammer } from './hammer.js';
 import { AudioFX } from './audio.js';
@@ -244,13 +245,10 @@ function landed() {
 const ZMAX = 2.3;
 S.zoom = { lvl: 0, tLvl: 0, fx: 0, fy: 0, tfx: 0, tfy: 0, applied: '' };
 const zoomOf = (l) => 1 + l * (ZMAX - 1);
-function clampFocus(fx, fy, zoom) {
-  const mx = camera.right * (1 - 1 / zoom), my = camera.top * (1 - 1 / zoom);
-  return [clamp(fx, -mx, mx), clamp(fy, -my, my)];
-}
 function focusOn(point) {
   const ax = camAxes(camera), d = point.clone().sub(new THREE.Vector3(...CAM.target));
-  [S.zoom.tfx, S.zoom.tfy] = clampFocus(d.dot(ax.right), d.dot(ax.up), ZMAX);
+  // centre the touched spot exactly (no edge clamp: a piece near the top of the room must not stay hidden under the HUD)
+  S.zoom.tfx = d.dot(ax.right); S.zoom.tfy = d.dot(ax.up);
   S.zoom.tLvl = 1;
 }
 function setZoomLevel(l, instant) {
@@ -270,7 +268,7 @@ function stepZoom(dt) {
   if (Math.abs(z.tLvl - z.lvl) < 0.002) z.lvl = z.tLvl;
   if (Math.abs(z.tfx - z.fx) < 0.003) z.fx = z.tfx;
   if (Math.abs(z.tfy - z.fy) < 0.003) z.fy = z.tfy;
-  const zoom = zoomOf(z.lvl), [fx, fy] = clampFocus(z.fx, z.fy, zoom);
+  const zoom = zoomOf(z.lvl), fx = z.fx * z.lvl, fy = z.fy * z.lvl;       // the shift grows with the zoom, so zooming out glides back to the whole room
   const sig = zoom.toFixed(4) + '|' + fx.toFixed(4) + '|' + fy.toFixed(4);
   if (sig !== z.applied) { z.applied = sig; setView(camera, fx, fy, zoom); }
   hammer.sizeK = 1 / Math.sqrt(zoom);
@@ -675,6 +673,23 @@ function onPointerDown(e) {
   }
 }
 canvas.addEventListener('pointerdown', onPointerDown);
+// Android (and every mobile browser) only lets audio start from a tap: unlock on the very first tap anywhere,
+// buttons included, so the menu music and the button clicks work from the first touch.
+window.addEventListener('pointerdown', () => { if (!audio.ctx || audio.ctx.state !== 'running') audio.unlock(); }, true);
+
+/** Android back button: step back one level of the UI; returns 'exit' when there is nothing left to close. */
+function goBack() {
+  const overlayOpen = !document.getElementById('overlay').classList.contains('hidden');
+  if (S.mode === 'paused') { ui.closeOverlay(); resume(); return 'handled'; }
+  if (S.mode === 'playing' || S.mode === 'intro' || S.mode === 'settling') { pause(); return 'handled'; }
+  if (S.mode === 'won' || S.mode === 'lost' || S.mode === 'chapterEnd') { const to = S.story ? 'story' : 'menu'; ui.closeOverlay(); toMenu(to); return 'handled'; }
+  if (S.mode === 'scene') { toMenu('story'); return 'handled'; }
+  if (S.mode === 'zen') { toMenu(); return 'handled'; }
+  if (overlayOpen) { ui.closeOverlay(); return 'handled'; }
+  if (ui.name && ui.name !== 'menu') { ui.show('menu'); return 'handled'; }
+  return 'exit';
+}
+initNative(goBack);
 window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (S.mode === 'paused') ui.closeOverlay(), resume(); else pause(); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { pause(); audio.stopMusic(); } else if (audio.ctx) audio.startMusic(musicFor(S.mode)); });
 
@@ -802,7 +817,7 @@ function frame(now) {
 // ---------------------------------------------------------------- boot
 applyQuality();
 if (qualityMode === 'low') applyQuality();
-window.__HB = { S, world, ui, startLevel, camera, scene, Save, effects, audio, AudioFX, startZen, playChapter, setWorld, buyPremium };
+window.__HB = { S, world, ui, startLevel, camera, scene, Save, effects, audio, AudioFX, startZen, playChapter, setWorld, buyPremium, renderer };
 nextDemo();
 audio.musicMode = 'menu';
 window.__stage = 'ready';

@@ -330,3 +330,13 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #cfeeff; fon
 .mag-track { flex: 1; width: auto; height: 16px; margin: 0 20px; }
 .mag-fill { left: 0; top: 0; bottom: 0; right: auto; width: 0; }
 .mag-knob { left: 0; bottom: auto; top: 50%; margin: -20px 0 0 -20px; }
+
+/* ---------- finger-sized touch targets ---------- */
+.toggle { width: 64px; height: 38px; }
+.toggle::after { top: 3px; left: 3px; width: 32px; height: 32px; }
+.toggle.on::after { transform: translateX(26px); }
+.seg button { padding: 10px 13px; }
+.pc { padding: 9px 13px 9px 10px; }
+.mag-track { height: 40px; background: transparent; margin: 0 14px; }
+.mag-track::before { content: ''; position: absolute; left: 0; right: 0; top: 12px; height: 16px; border-radius: 9px; background: #e3def8; }
+.mag-fill { top: 12px; bottom: auto; height: 16px; }
